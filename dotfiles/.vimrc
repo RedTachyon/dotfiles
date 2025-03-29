@@ -45,4 +45,4 @@ set mouse=a
 set nowrap
 
 " Display a vertical column at 80 characters (optional code style guide)
-set colorcolumn=80
+set colorcolumn=120
