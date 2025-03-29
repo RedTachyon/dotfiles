@@ -1,52 +1,52 @@
 #!/bin/bash
 # ~/.dotfiles/scripts/setup_dotfiles.sh
-# This script creates symlinks in your home directory for all files inside ~/.dotfiles/dotfiles.
-# If a target file already exists, you'll be asked whether to overwrite it.
-# Existing files that are overwritten are moved to a backup directory.
+# This script creates symlinks in your home directory for every item (files and directories)
+# inside ~/.dotfiles/dotfiles. If a target already exists, you'll be prompted whether to overwrite it.
+# Overwritten items are moved to a backup directory.
 
-# Directory containing your dotfiles (inside your bare dotfiles repo)
+# Directories
 SOURCE_DIR="$HOME/.dotfiles/dotfiles"
-# Your home directory where the symlinks will be created
 TARGET_HOME="$HOME"
-# Create a backup directory with a timestamp in case files need to be moved
 BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d%H%M%S)"
 
 echo "Starting symlink setup..."
 echo "Source: $SOURCE_DIR"
 echo "Target: $TARGET_HOME"
-echo "Backup (if needed): $BACKUP_DIR"
+echo "Backup directory: $BACKUP_DIR"
 echo
 
-# Traverse all files (recursively) in the source directory.
-find "$SOURCE_DIR" -type f | while read -r src_file; do
-    # Compute the path relative to SOURCE_DIR.
-    rel_path="${src_file#$SOURCE_DIR/}"
-    target_file="$TARGET_HOME/$rel_path"
-    target_dir="$(dirname "$target_file")"
+# Collect all items (files and directories) from the source directory into an array
+mapfile -d '' items < <(find "$SOURCE_DIR" -mindepth 1 -print0)
+
+# Iterate over each item explicitly using a for-loop.
+for src_item in "${items[@]}"; do
+    # Compute the relative path so that ~/.dotfiles/dotfiles/.vimrc becomes .vimrc
+    rel_path="${src_item#$SOURCE_DIR/}"
+    target_item="$TARGET_HOME/$rel_path"
+    target_dir="$(dirname "$target_item")"
     
-    echo "Processing $rel_path ..."
+    echo "Processing: $rel_path"
     
     # Ensure the target directory exists.
     mkdir -p "$target_dir"
     
-    # If a file (or symlink) already exists at the target, prompt for action.
-    if [ -e "$target_file" ] || [ -L "$target_file" ]; then
-        echo "WARNING: $target_file already exists."
-        read -p "Overwrite $target_file? (y/n): " answer
+    # Check if the target item already exists.
+    if [ -e "$target_item" ] || [ -L "$target_item" ]; then
+        echo "WARNING: $target_item already exists."
+        read -r -p "Overwrite $target_item? (y/n): " answer
         if [[ "$answer" =~ ^[Yy]$ ]]; then
-            # Create the backup directory for this file if it doesn't exist.
             mkdir -p "$BACKUP_DIR/$(dirname "$rel_path")"
-            mv "$target_file" "$BACKUP_DIR/$rel_path"
-            echo "Moved existing file to backup: $BACKUP_DIR/$rel_path"
+            mv "$target_item" "$BACKUP_DIR/$rel_path"
+            echo "Moved existing item to backup: $BACKUP_DIR/$rel_path"
         else
-            echo "Skipping $target_file"
+            echo "Skipping $target_item"
             continue
         fi
     fi
-
+    
     # Create the symlink.
-    ln -s "$src_file" "$target_file"
-    echo "Created symlink: $target_file -> $src_file"
+    ln -s "$src_item" "$target_item"
+    echo "Created symlink: $target_item -> $src_item"
     echo
 done
 
