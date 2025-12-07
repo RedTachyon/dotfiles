@@ -38,8 +38,8 @@ endif
 " A basic colorscheme that works in many terminal setups
 colorscheme desert
 
-" Enable mouse support (if your terminal supports it)
-set mouse=a
+" Disable mouse so terminal handles selection/clipboard
+set mouse=
 
 " Do not wrap lines (helpful when editing code)
 set nowrap
