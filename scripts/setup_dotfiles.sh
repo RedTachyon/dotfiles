@@ -32,6 +32,15 @@ for src_item in "${items[@]}"; do
     
     # Check if the target item already exists.
     if [ -e "$target_item" ] || [ -L "$target_item" ]; then
+        if [ -L "$target_item" ]; then
+            link_target="$(readlink "$target_item")"
+            if [ "$link_target" = "$src_item" ]; then
+                echo "Already linked: $target_item -> $src_item"
+                echo
+                continue
+            fi
+        fi
+
         echo "WARNING: $target_item already exists."
         read -r -p "Overwrite $target_item? (y/n): " answer
         if [[ "$answer" =~ ^[Yy]$ ]]; then

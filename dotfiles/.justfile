@@ -1,16 +1,33 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-passwordless-sudo-enable:
+sudo-nopass-enable:
     toggle-passwordless-sudo enable
 
-passwordless-sudo-disable:
+sudo-nopass-disable:
     toggle-passwordless-sudo disable
 
-passwordless-sudo-status:
+sudo-nopass-status:
     toggle-passwordless-sudo status
 
-alias sudo-nopass-enable := passwordless-sudo-enable
+dot-update:
+    #!/usr/bin/env bash
+    set -euo pipefail
 
-alias sudo-nopass-disable := passwordless-sudo-disable
+    cd "$HOME/.dotfiles"
+    old_head="$(git rev-parse HEAD)"
 
-alias sudo-nopass-status := passwordless-sudo-status
+    git pull --ff-only
+
+    new_head="$(git rev-parse HEAD)"
+    if [[ "$old_head" == "$new_head" ]]; then
+        echo "Dotfiles are already up to date."
+        exit 0
+    fi
+
+    python3 scripts/setup_dotfiles.py
+
+alias passwordless-sudo-enable := sudo-nopass-enable
+
+alias passwordless-sudo-disable := sudo-nopass-disable
+
+alias passwordless-sudo-status := sudo-nopass-status

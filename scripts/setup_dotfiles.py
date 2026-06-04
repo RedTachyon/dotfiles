@@ -31,6 +31,11 @@ def main():
 
             # If the target exists (file or symlink), prompt for action.
             if os.path.lexists(target_file):
+                if os.path.islink(target_file) and os.path.realpath(target_file) == os.path.realpath(source_file):
+                    print("Already linked: {} -> {}".format(target_file, source_file))
+                    print()
+                    continue
+
                 print("WARNING: {} already exists.".format(target_file))
                 answer = input("Overwrite {}? (y = remove, b = backup and remove, n = skip): ".format(target_file))
                 answer = answer.lower().strip()
@@ -76,4 +81,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
