@@ -39,7 +39,12 @@ beszel-agent-install:
     if [[ "$(uname -s)" == "Darwin" ]]; then
         curl -fsSL https://get.beszel.dev/brew -o /tmp/install-agent.sh
         chmod +x /tmp/install-agent.sh
-        /tmp/install-agent.sh -k "$BESZEL_KEY" -t "$BESZEL_TOKEN" -url "$hub_url" -p "$listen"
+        /tmp/install-agent.sh -k "$BESZEL_KEY" -t "$BESZEL_TOKEN" -url "$hub_url" -p "$listen" || true
+        uid="$(id -u)"
+        plist="$HOME/Library/LaunchAgents/homebrew.mxcl.beszel-agent.plist"
+        launchctl bootout "user/$uid" "$plist" 2>/dev/null || true
+        launchctl bootstrap "user/$uid" "$plist"
+        launchctl print "user/$uid/homebrew.mxcl.beszel-agent" >/dev/null
         exit 0
     fi
 
@@ -102,7 +107,9 @@ beszel-agent-start:
     set -euo pipefail
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        brew services start beszel-agent
+        uid="$(id -u)"
+        plist="$HOME/Library/LaunchAgents/homebrew.mxcl.beszel-agent.plist"
+        launchctl bootstrap "user/$uid" "$plist" 2>/dev/null || true
     else
         sudo systemctl start beszel-agent.service
     fi
@@ -112,7 +119,7 @@ beszel-agent-stop:
     set -euo pipefail
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        brew services stop beszel-agent
+        launchctl bootout "user/$(id -u)" "$HOME/Library/LaunchAgents/homebrew.mxcl.beszel-agent.plist" 2>/dev/null || true
     else
         sudo systemctl stop beszel-agent.service
     fi
@@ -122,7 +129,10 @@ beszel-agent-restart:
     set -euo pipefail
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        brew services restart beszel-agent
+        uid="$(id -u)"
+        plist="$HOME/Library/LaunchAgents/homebrew.mxcl.beszel-agent.plist"
+        launchctl bootout "user/$uid" "$plist" 2>/dev/null || true
+        launchctl bootstrap "user/$uid" "$plist"
     else
         sudo systemctl restart beszel-agent.service
     fi
@@ -132,7 +142,7 @@ beszel-agent-status:
     set -euo pipefail
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        brew services info beszel-agent
+        launchctl print "user/$(id -u)/homebrew.mxcl.beszel-agent"
     else
         sudo systemctl status --no-pager --lines=20 beszel-agent.service
     fi
@@ -152,7 +162,7 @@ beszel-agent-disable:
     set -euo pipefail
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        brew services stop beszel-agent
+        launchctl bootout "user/$(id -u)" "$HOME/Library/LaunchAgents/homebrew.mxcl.beszel-agent.plist" 2>/dev/null || true
     else
         sudo systemctl disable --now beszel-agent.service
     fi
@@ -162,7 +172,7 @@ beszel-agent-uninstall:
     set -euo pipefail
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        brew services stop beszel-agent 2>/dev/null || true
+        launchctl bootout "user/$(id -u)" "$HOME/Library/LaunchAgents/homebrew.mxcl.beszel-agent.plist" 2>/dev/null || true
         brew uninstall beszel-agent
         rm -f "$HOME/.config/beszel/beszel-agent.env"
     else
