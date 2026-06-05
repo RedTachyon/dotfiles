@@ -93,7 +93,8 @@ beszel-agent-install:
         | sudo tee /etc/systemd/system/beszel-agent.service >/dev/null
 
     sudo systemctl daemon-reload
-    sudo systemctl enable --now beszel-agent.service
+    sudo systemctl enable beszel-agent.service
+    sudo systemctl restart beszel-agent.service
     sudo systemctl status --no-pager --lines=12 beszel-agent.service
 
 beszel-agent-start:
